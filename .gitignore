@@ -6,6 +6,7 @@
 *.pem
 *.crt
 *.p12
+.kanbn
 
 # Temporary files
 *.log

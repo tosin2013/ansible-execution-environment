@@ -1,10 +1,20 @@
 # Google Cloud Platform Automation Environment Configuration
 # Use this when you need tools for GCP cloud infrastructure automation
+#
+# Last Verified:
+#   Date: Not verified yet
+#   Version: 0.1.0
+#   Verified By: None
+#   GCP SDK Version: Latest
+#   Status: ⚠️ Needs Verification
+#   Notes: Initial example awaiting verification
 
 base_image:
-  name: "registry.access.redhat.com/ubi9/ubi-minimal:latest"  # Using UBI minimal for smaller size
+  name: registry.redhat.io/ansible-automation-platform-25/ee-minimal-rhel9:latest
   auth:
-    enabled: false  # UBI images are freely available
+    enabled: true
+    username: "${EE_REGISTRY_USERNAME}"
+    password: "${EE_REGISTRY_PASSWORD}"
 
 package_manager:
   path: "/usr/bin/microdnf"
@@ -59,15 +69,19 @@ build_steps:
     environment_check: true
     custom_steps:
       # Install Google Cloud SDK repository
-      - RUN curl https://packages.cloud.google.com/yum/doc/yum-key.gpg | tee /etc/yum.repos.d/google-cloud-sdk.gpg &&
-          curl https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg | tee /etc/yum.repos.d/google-cloud-sdk-rpm-package-key.gpg &&
-          $PKGMGR install -y google-cloud-sdk
+      - RUN curl https://packages.cloud.google.com/yum/doc/yum-key.gpg \
+          | tee /etc/yum.repos.d/google-cloud-sdk.gpg \
+          && curl https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg \
+          | tee /etc/yum.repos.d/google-cloud-sdk-rpm-package-key.gpg \
+          && $PKGMGR install -y google-cloud-sdk
       # Install additional GCP components
-      - RUN gcloud components install gke-gcloud-auth-plugin kubectl docker-credential-gcr --quiet
+      - RUN gcloud components install gke-gcloud-auth-plugin kubectl \
+          docker-credential-gcr --quiet
       # Install Cloud SQL Proxy
-      - RUN curl -o cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 &&
-          chmod +x cloud_sql_proxy &&
-          mv cloud_sql_proxy /usr/local/bin/
+      - RUN curl -o cloud_sql_proxy \
+          https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 \
+          && chmod +x cloud_sql_proxy \
+          && mv cloud_sql_proxy /usr/local/bin/
 
   prepend_galaxy:
     copy_ansible_config: true

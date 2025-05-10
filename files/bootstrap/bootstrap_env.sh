@@ -1,10 +1,17 @@
 #!/bin/bash
-set -euo pipefail
 
-# Script metadata
-SCRIPT_NAME="$(basename "$0")"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# Check if ANSIBLE_HUB_TOKEN is set
+if [ -z "$ANSIBLE_HUB_TOKEN" ]; then
+  echo "Error: ANSIBLE_HUB_TOKEN environment variable is not set."
+  exit 1
+else
+  echo "ANSIBLE_HUB_TOKEN is set."
+fi
+    if ansible-galaxy collection list | grep -q "amazon.aws"; then
+        return 0
+    fi
+    return 1
+}
 
 # Constants for authentication and API endpoints
 SSO_URL="https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token"
@@ -645,6 +652,25 @@ main() {
     if [[ "${SKIP_DEPS}" != "1" ]]; then
         setup_venv
         setup_ansible_collections
+    fi
+    
+    # Create virtual environment if it doesn't exist
+    if [[ ! -d "${PROJECT_ROOT}/.venv" ]]; then
+        log_info "Creating virtual environment"
+        python3 -m venv "${PROJECT_ROOT}/.venv"
+    else
+        log_info "Virtual environment already exists"
+    fi
+    
+    # Install Ansible collections
+    log_info "Installing Ansible collections"
+    if check_collections; then
+        log_info "Required collections already installed, skipping Automation Hub check"
+    else
+        # Proceed with token validation and collection installation
+        validate_token "hub" "${ANSIBLE_HUB_TOKEN:-}"
+        refresh_token "hub" "${ANSIBLE_HUB_TOKEN:-}"
+        # ... rest of the collection installation code ...
     fi
     
     setup_container_env

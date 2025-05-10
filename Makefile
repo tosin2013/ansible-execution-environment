@@ -107,21 +107,48 @@ info: # Produce information about the published container image that can be used
 
 publish: # Publish the image with proper tags to container registry
 	@echo "\n\n***************************** Publishing... \n"
-	$(CONTAINER_ENGINE) login $(TARGET_HUB)
-	$(CONTAINER_ENGINE) tag  \
-		$(TARGET_NAME):$(TARGET_TAG) $(TARGET_NAME):latest
-	$(CONTAINER_ENGINE) tag  \
+	# Tag with version
+	$(CONTAINER_ENGINE) tag \
 		$(TARGET_NAME):$(TARGET_TAG) \
-		$(TARGET_HUB)/$(TARGET_NAME):$(TARGET_TAG)
-	$(CONTAINER_ENGINE) push \
-		$(TARGET_HUB)/$(TARGET_NAME):$(TARGET_TAG)
-	$(CONTAINER_ENGINE) pull \
-		$(TARGET_HUB)/$(TARGET_NAME):$(TARGET_TAG)
-	$(CONTAINER_ENGINE) tag  \
-		$(TARGET_HUB)/$(TARGET_NAME):$(TARGET_TAG) \
-		$(TARGET_HUB)/${TARGET_NAME}\:latest
-	$(CONTAINER_ENGINE) push \
-		$(TARGET_HUB)/${TARGET_NAME}:latest
+		$(TARGET_NAME):$(TARGET_VERSION)
+	
+	# For each registry in TARGET_REGISTRIES
+	@for registry in $$(echo $(TARGET_REGISTRIES) | tr ',' ' '); do \
+		echo "Publishing to $$registry..."; \
+		$(CONTAINER_ENGINE) tag \
+			$(TARGET_NAME):$(TARGET_TAG) \
+			$$registry/$(TARGET_TYPE)/$(TARGET_NAME):$(TARGET_VERSION); \
+		$(CONTAINER_ENGINE) tag \
+			$(TARGET_NAME):$(TARGET_TAG) \
+			$$registry/$(TARGET_TYPE)/$(TARGET_NAME):latest; \
+		$(CONTAINER_ENGINE) tag \
+			$(TARGET_NAME):$(TARGET_TAG) \
+			$$registry/$(TARGET_TYPE)/$(TARGET_NAME):$$(date +%Y%m%d); \
+		\
+		if [ -n "$(CI)" ]; then \
+			$(CONTAINER_ENGINE) tag \
+				$(TARGET_NAME):$(TARGET_TAG) \
+				$$registry/$(TARGET_TYPE)/$(TARGET_NAME):edge; \
+		fi; \
+		\
+		if [ -n "$(QUAY_USERNAME)" ] && [[ $$registry == *"quay.io"* ]]; then \
+			$(CONTAINER_ENGINE) login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) quay.io; \
+		elif [[ $$registry == $(INTERNAL_REGISTRY) ]]; then \
+			$(CONTAINER_ENGINE) login -u $(INTERNAL_REGISTRY_USER) -p $(INTERNAL_REGISTRY_PASSWORD) $(INTERNAL_REGISTRY); \
+		fi; \
+		\
+		$(CONTAINER_ENGINE) push $$registry/$(TARGET_TYPE)/$(TARGET_NAME):$(TARGET_VERSION); \
+		$(CONTAINER_ENGINE) push $$registry/$(TARGET_TYPE)/$(TARGET_NAME):latest; \
+		$(CONTAINER_ENGINE) push $$registry/$(TARGET_TYPE)/$(TARGET_NAME):$$(date +%Y%m%d); \
+		\
+		if [ -n "$(CI)" ]; then \
+			$(CONTAINER_ENGINE) push $$registry/$(TARGET_TYPE)/$(TARGET_NAME):edge; \
+		fi; \
+		\
+		if [[ $$registry == *"quay.io"* ]] || [[ $$registry == $(INTERNAL_REGISTRY) ]]; then \
+			$(CONTAINER_ENGINE) logout $$registry; \
+		fi; \
+	done
 
 shell: # Run an interactive shell in the execution environment
 	$(CONTAINER_ENGINE) run -it --rm $(TARGET_NAME):$(TARGET_TAG) /bin/bash

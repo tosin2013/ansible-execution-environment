@@ -8,6 +8,15 @@ Example repository to build Ansible Execution Environments using a Makefile.
 - [Architecture Decision Records](docs/adrs/)
   - [ADR-0006: Authentication Flow and Token Handling](docs/adrs/0006-authentication-flow-and-token-handling.md)
 
+### ADRs
+
+- [ADR-0001: Project Goal and Value](docs/adrs/0001-project-goal-and-value.md)
+- [ADR-0002: File Relationships and Interaction](docs/adrs/0002-file-relationships-and-interaction.md)
+
+### Updating ADRs
+
+When updating ADRs, ensure that the status is updated appropriately (Proposed, Accepted, Deprecated, Superseded).  All changes should be documented with clear explanations of the rationale behind the changes.
+
 TODO: Update docs to leverage new PIP_INDEX_URL environment variable option
 https://developers.redhat.com/articles/2025/01/27/how-manage-python-dependencies-ansible-execution-environments#python_dependency_management
 
