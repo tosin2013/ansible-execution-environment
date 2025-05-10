@@ -1,0 +1,8 @@
+---
+- name: Test Playbook
+  hosts: localhost
+  gather_facts: true
+  tasks:
+    - name: Print system info
+      debug:
+        msg: "Running on {{ ansible_distribution }} {{ ansible_distribution_version }}" 
