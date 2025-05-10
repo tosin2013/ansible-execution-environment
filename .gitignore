@@ -7,6 +7,7 @@
 *.crt
 *.p12
 .kanbn
+offline-token.txt
 
 # Temporary files
 *.log

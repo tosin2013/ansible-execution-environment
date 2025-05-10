@@ -1,0 +1,253 @@
+---
+# Execution Environment Variables
+# This file contains all configurable parameters for your execution environment.
+# Values defined here will be used to generate the execution-environment.yml file.
+
+# ------------------------------------------------------------------------------
+# Testing and Validation
+# ------------------------------------------------------------------------------
+# Example environments can be tested using multiple methods:
+#
+# 1. Bootstrap Environment Testing:
+#    Run: ./files/bootstrap/bootstrap_e2e.sh -e <environment>
+#    Environments: aws, gcp, openshift
+#    This tests:
+#    - Environment setup and validation
+#    - Collection verification and installation
+#    - Image building
+#    - Test playbook execution
+#    - Report generation
+#
+# 2. Example Verification:
+#    Run: ./files/testing/verify_example.sh -e <example_name>
+#    Examples: openshift_virt, aws_cloud, gcp_cloud
+#    Validates:
+#    - YAML syntax
+#    - Required fields
+#    - Required tools
+#    - Dependencies
+#    - Registry access
+#    - Build testing
+#
+# 3. Security Validation:
+#    Run: ./files/bootstrap/validate_security.sh
+#    Checks:
+#    - DNS security
+#    - Token validation
+#    - Security controls
+#    - Compliance requirements
+#
+# Each example environment below includes validation requirements that are
+# checked during testing. Add these requirements when creating new examples.
+
+# ------------------------------------------------------------------------------
+# Ansible Core Configuration
+# ------------------------------------------------------------------------------
+ansible_core:
+  version: "2.15.0"
+
+# ------------------------------------------------------------------------------
+# Base Image Configuration
+# ------------------------------------------------------------------------------
+base_image:
+  # The base image to use for building the execution environment
+  # Options:
+  # - registry.redhat.io/ansible-automation-platform-25/ee-minimal-rhel9:latest (Red Hat subscription required)
+  # - registry.access.redhat.com/ubi9/ubi-minimal:latest (Free, minimal UBI image)
+  # - docker.io/ubuntu:22.04 (Ubuntu-based alternative)
+  name: "registry.access.redhat.com/ubi9/ubi-minimal:latest"
+
+  # Authentication settings for private registries (optional)
+  # If using registry.redhat.io, you must provide credentials
+  # Environment Variable Overrides:
+  # - EE_REGISTRY_USERNAME: Override registry username
+  # - EE_REGISTRY_PASSWORD: Override registry password
+  # - EE_BASE_IMAGE: Override the base image completely
+  auth:
+    enabled: false
+    username: ""  # Can be overridden with env var: EE_REGISTRY_USERNAME
+    password: ""  # Can be overridden with env var: EE_REGISTRY_PASSWORD
+
+# ------------------------------------------------------------------------------
+# Example Environment Configurations
+# ------------------------------------------------------------------------------
+example_environments:
+  openshift_virt:
+    # OpenShift Virtualization environment
+    # Used for managing virtual machines on OpenShift/Kubernetes
+    dependencies:
+      galaxy: "files/openshift-virt-requirements.yml"
+      python: "files/openshift-virt-requirements.txt"
+      system: "files/openshift-virt-bindep.txt"
+    validation:
+      required_tools:
+        - podman         # For container operations
+        - buildah        # For container image building
+        - skopeo        # For container image inspection/copying
+        - oc            # OpenShift CLI tool
+        - kubectl       # Kubernetes CLI tool
+        - virtctl       # Virtual machine management
+      required_access:
+        - registry.redhat.io            # Base images
+        - quay.io                       # Additional tools
+        - registry.connect.redhat.com   # Certified operators
+      validation_steps:
+        - "Verify OpenShift client tools"
+        - "Test container image operations"
+        - "Validate VM template access"
+        - "Check collection availability"
+
+  aws_cloud:
+    # AWS Cloud Automation environment
+    # Used for AWS infrastructure and service management
+    dependencies:
+      galaxy: "files/aws-cloud-requirements.yml"
+      python: "files/aws-cloud-requirements.txt"
+      system: "files/aws-cloud-bindep.txt"
+    validation:
+      required_tools:
+        - podman         # For container operations
+        - buildah        # For container image building
+        - skopeo        # For container image inspection
+        - terraform     # For infrastructure as code
+        - aws           # AWS CLI
+      required_access:
+        - registry.redhat.io     # Base images
+        - quay.io               # Additional tools
+      validation_steps:
+        - "Verify AWS CLI installation"
+        - "Test AWS credentials"
+        - "Validate Terraform providers"
+        - "Check collection availability"
+
+  gcp_cloud:
+    # Google Cloud Platform environment
+    # Used for GCP infrastructure and service management
+    dependencies:
+      galaxy: "files/cloud-gcp-requirements.yml"
+      python: "files/cloud-gcp-requirements.txt"
+      system: "files/cloud-gcp-bindep.txt"
+    validation:
+      required_tools:
+        - podman         # For container operations
+        - buildah        # For container image building
+        - skopeo        # For container image inspection
+        - terraform     # For infrastructure as code
+        - gcloud        # Google Cloud SDK
+      required_access:
+        - registry.redhat.io     # Base images
+        - quay.io               # Additional tools
+      validation_steps:
+        - "Verify GCloud SDK installation"
+        - "Test GCP authentication"
+        - "Validate Terraform providers"
+        - "Check collection availability"
+
+  security_focused:
+    # Security and Compliance-Focused Environment
+    # Used for security automation, compliance checking and system hardening
+    dependencies:
+      galaxy: "files/security-focused-requirements.yml"
+      python: "files/security-focused-requirements.txt"
+      system: "files/security-focused-bindep.txt"
+    validation:
+      required_tools:
+        - podman         # For container operations
+        - openscap-scanner  # For system compliance scanning
+        - oscap         # OpenSCAP CLI tool
+        - scap-workbench # SCAP content viewer
+        - aide          # Advanced Intrusion Detection Environment
+      required_access:
+        - registry.redhat.io     # Base images
+        - quay.io               # Additional tools
+      validation_steps:
+        - "Verify OpenSCAP installation"
+        - "Test SCAP content access"
+        - "Validate security tool configurations"
+        - "Check collection availability"
+        - "Verify AIDE database initialization"
+
+# ------------------------------------------------------------------------------
+# Package Management
+# ------------------------------------------------------------------------------
+package_manager:
+  # Path to the package manager binary
+  # Options: /usr/bin/microdnf, /usr/bin/dnf, /usr/bin/yum
+  path: "/usr/bin/microdnf"
+
+  # Default options for package installation
+  options: "--setopt=tsflags=nodocs --setopt=install_weak_deps=false"
+
+  # Additional repositories to enable
+  # Format: repo_name: enabled
+  repositories:
+    rhocp-4.14-for-rhel-9-aarch64-rpms: true
+    hashicorp: false
+
+# ------------------------------------------------------------------------------
+# Dependencies
+# ------------------------------------------------------------------------------
+dependencies:
+  # Ansible Galaxy collections requirements file
+  galaxy:
+    file: "requirements.yml"
+    options: "--ignore-certs"  # Can be overridden with env var: ANSIBLE_GALAXY_CLI_COLLECTION_OPTS
+
+  # Python package requirements
+  python:
+    file: "requirements.txt"
+    upgrade_pip: true  # Whether to upgrade pip before installing requirements
+
+  # System package requirements
+  system:
+    file: "bindep.txt"
+
+# ------------------------------------------------------------------------------
+# Additional Build Files
+# ------------------------------------------------------------------------------
+build_files:
+  # List of files to copy into the image
+  # Format: src: source_path, dest: destination_directory
+  - src: "ansible.cfg"
+    dest: "configs/ansible.cfg"
+    required: true
+
+  - src: "krb5.conf"
+    dest: "configs/krb5.conf"
+    enabled: false
+
+# ------------------------------------------------------------------------------
+# Tool Installation
+# ------------------------------------------------------------------------------
+tools:
+  # Azure CLI
+  azure_cli:
+    enabled: false
+
+  # HashiCorp Packer
+  packer:
+    enabled: false
+    version: "latest"
+
+  # OpenSCAP Scanner
+  openscap:
+    enabled: false
+
+# ------------------------------------------------------------------------------
+# Build Steps Configuration
+# ------------------------------------------------------------------------------
+build_steps:
+  # Pre-build validation steps
+  prepend_base:
+    system_info: true  # Run whoami and OS release info commands
+    environment_check: true  # Echo package manager and Python info
+
+  # Post-dependency installation steps
+  prepend_galaxy:
+    copy_ansible_config: true
+    copy_kerberos_config: false
+
+  # Final cleanup steps
+  append_final:
+    verify_dependencies: true  # Run pip check
+    cleanup_cache: true  # Remove package manager cache and logs

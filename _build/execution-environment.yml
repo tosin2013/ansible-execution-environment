@@ -1,0 +1,25 @@
+---
+version: 3
+
+dependencies:
+  ansible_core:
+    package_pip: ansible-core==2.15.0
+  ansible_runner:
+    package_pip: ansible-runner>=2.3.1
+  galaxy: requirements.yml
+  python: requirements.txt
+  system: bindep.txt
+
+images:
+  base_image:
+    name: "registry.access.redhat.com/ubi9/ubi-minimal:latest"
+
+additional_build_steps:
+  prepend_base:
+    - ENV PKGMGR=microdnf
+    - RUN $PKGMGR update -y && $PKGMGR install -y python3 python3-pip python3-devel gcc make which
+  prepend_galaxy:
+    - RUN python3 -m pip install --upgrade pip setuptools wheel
+  append_final:
+    - RUN pip3 check
+    - RUN $PKGMGR clean all && rm -rf /var/cache/$PKGMGR

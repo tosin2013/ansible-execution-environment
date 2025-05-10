@@ -1,0 +1,69 @@
+---
+version: 3
+
+# This is a template execution environment configuration.
+# Copy this file and ee-variables.yml to start customizing your environment.
+# See examples/ directory for different configuration examples.
+
+build_arg_defaults:
+  ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: "{{ dependencies.galaxy.options }}"
+  PYCMD: "/usr/bin/python3"
+
+dependencies:
+  ansible_core:
+    package_pip: "ansible-core=={{ ansible_core.version }}"
+  galaxy: "{{ dependencies.galaxy.file }}"
+  python: "{{ dependencies.python.file }}"
+  system: "{{ dependencies.system.file }}"
+
+images:
+  base_image:
+    name: "{{ base_image.name }}"
+
+options:
+  package_manager_path: "{{ package_manager.path }}"
+
+additional_build_files:
+  # Only include files that are marked as required or enabled
+  {% for file in build_files %}
+  {% if file.required or file.enabled | default(false) %}
+  - src: "{{ file.src }}"
+    dest: "{{ file.dest }}"
+  {% endif %}
+  {% endfor %}
+
+additional_build_steps:
+  prepend_builder:
+    # Ensure base dependencies are available before any other operations
+    - RUN $PKGMGR install -y python3 python3-pip python3-devel gcc make && $PKGMGR clean all
+    - RUN $PYCMD -m pip install --upgrade pip setuptools wheel
+    - RUN $PYCMD -m pip install --no-cache-dir "ansible-core=={{ ansible_core.version }}"
+    - RUN ansible --version && ansible-galaxy --version
+
+  prepend_base:
+    {% if build_steps.prepend_base.system_info %}
+    - RUN whoami
+    - RUN cat /etc/os-release
+    {% endif %}
+
+    {% if build_steps.prepend_base.environment_check %}
+    - RUN echo "Using Python: $(which python3) version $(python3 --version)"
+    {% endif %}
+
+  prepend_galaxy:
+    - RUN ansible-galaxy --version
+    {% if build_steps.prepend_galaxy.copy_ansible_config %}
+    - COPY _build/configs/ansible.cfg /etc/ansible/ansible.cfg
+    {% endif %}
+    {% if build_steps.prepend_galaxy.copy_kerberos_config %}
+    - COPY _build/configs/krb5.conf /etc/krb5.conf
+    {% endif %}
+
+  append_final:
+    {% if build_steps.append_final.verify_dependencies %}
+    - RUN ansible --version
+    - RUN pip3 check
+    {% endif %}
+    {% if build_steps.append_final.cleanup_cache %}
+    - RUN $PKGMGR clean all
+    {% endif %}

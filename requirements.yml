@@ -1,0 +1,27 @@
+---
+collections:
+  # Core collections needed for AAP 2.5
+  - name: ansible.posix
+    version: "1.5.4"
+  - name: community.general
+    version: "7.5.0"
+  
+  # OpenShift Virtualization collections
+  - name: community.libvirt
+    version: "1.2.0"
+  - name: kubevirt.core
+    version: "1.0.0"
+  - name: kubernetes.core
+    version: "2.4.0"
+  
+  # AWS Cloud collections
+  - name: amazon.aws
+    version: "6.3.0"
+  - name: community.aws
+    version: "6.3.0"
+  
+  # GCP Cloud collections
+  - name: google.cloud
+    version: "1.2.0"
+  - name: community.google
+    version: "1.0.0" 

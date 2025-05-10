@@ -1,0 +1,8 @@
+---
+collections:
+  - name: google.cloud
+    version: "1.2.0"
+  - name: community.google
+    version: "1.0.0"
+  - name: community.general
+    version: "7.5.0"
