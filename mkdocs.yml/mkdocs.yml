@@ -1,5 +1,6 @@
+---
 site_name: Ansible Execution Environment
-site_description: 
+site_description:
 site_url: https://your-domain.com
 docs_dir: ../docs
 site_dir: ../site
@@ -43,17 +44,17 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Tutorials:
-    - Getting Started: tutorials/getting-started.md
+      - Getting Started: tutorials/getting-started.md
   - How-To Guides:
-    - How to Test Your Execution Environment: how-to/testing-execution-environment.md
-    - How to Add Windows Support: how-to/add-windows-support.md
-    - Advanced Tasks: how-to/advanced-usage.md
-    - CI/CD with GitHub Actions and Tekton: how-to/ci-cd.md
-    - Build Docs Locally (MkDocs): how-to/build-docs-locally.md
-    - Optional llms.txt Manifest: how-to/llms-txt.md
+      - How to Test Your Execution Environment: how-to/testing-execution-environment.md
+      - How to Add Windows Support: how-to/add-windows-support.md
+      - Advanced Tasks: how-to/advanced-usage.md
+      - CI/CD with GitHub Actions and Tekton: how-to/ci-cd.md
+      - Build Docs Locally (MkDocs): how-to/build-docs-locally.md
+      - Optional llms.txt Manifest: how-to/llms-txt.md
   - Reference:
-    - Tooling Reference: reference/tooling.md
+      - Tooling Reference: reference/tooling.md
   - Explanation:
-    - Execution Environment Concepts: explanation/concepts.md
-    - Technology Stack: explanation/technology-stack.md
-    - Design Decisions: explanation/design-decisions.md
+      - Execution Environment Concepts: explanation/concepts.md
+      - Technology Stack: explanation/technology-stack.md
+      - Design Decisions: explanation/design-decisions.md

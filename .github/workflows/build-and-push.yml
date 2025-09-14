@@ -2,10 +2,10 @@
 ---
 name: Build and Publish EE (Podman)
 
-on:
+'on':
   push:
-    branches: [ main ]
-    tags: [ 'v*', 'release-*' ]
+    branches: [main]
+    tags: ['v*', 'release-*']
   workflow_dispatch:
 
 env:

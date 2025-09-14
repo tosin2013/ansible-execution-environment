@@ -1,11 +1,11 @@
 ---
 name: Docs Build
 
-on:
+'on':
   pull_request:
-    branches: [ "**" ]
+    branches: ["**"]
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-docs:
@@ -28,8 +28,7 @@ jobs:
         run: |
           mkdocs build -f mkdocs.yml/mkdocs.yml --strict
 
-      - name: Upload site artifact (PR only)
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Upload site artifact
         uses: actions/upload-artifact@v4
         with:
           name: site
