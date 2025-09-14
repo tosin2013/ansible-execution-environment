@@ -26,7 +26,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          mkdocs -f mkdocs.yml/mkdocs.yml build --strict
+          mkdocs build -f mkdocs.yml/mkdocs.yml --strict
 
       - name: Upload site artifact (PR only)
         if: ${{ github.event_name == 'pull_request' }}

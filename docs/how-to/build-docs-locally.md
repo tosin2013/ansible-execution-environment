@@ -19,11 +19,11 @@ Steps
    ```
 2) Build the site:
    ```bash
-   mkdocs -f mkdocs.yml/mkdocs.yml build
+   mkdocs build -f mkdocs.yml/mkdocs.yml
    ```
 3) Serve locally on port 8000:
    ```bash
-   mkdocs -f mkdocs.yml/mkdocs.yml serve -a 127.0.0.1:8000
+   mkdocs serve -f mkdocs.yml/mkdocs.yml -a 127.0.0.1:8000
    # open http://127.0.0.1:8000
    ```
 
