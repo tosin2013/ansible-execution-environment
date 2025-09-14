@@ -6,3 +6,6 @@ ansible.cfg
 .vagrant
 collections
 *.log
+/.venv-docs/
+/site/
+/.mkdocs-server.log

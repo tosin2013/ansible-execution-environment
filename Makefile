@@ -16,7 +16,7 @@ ifndef $(SOURCE_TOKEN)
   $(error The environment variable ANSIBLE_HUB_TOKEN is undefined and required)
 endif
 
-.PHONY : header clean lint check build scan test publish list shell
+.PHONY : header clean lint check build scan test publish list shell docs-setup docs-build docs-serve docs-test
 all: header clean lint build test publish
 
 header:
@@ -110,3 +110,20 @@ publish: # Publish the image with proper tags to container registry
 
 shell: # Run an interactive shell in the execution environment
 	$(CONTAINER_ENGINE) run -it --rm $(TARGET_NAME):$(TARGET_TAG) /bin/bash
+
+docs-setup: # Setup MkDocs virtualenv and dependencies
+	@echo "\n\n***************************** Docs Setup... \n"
+	python3 -m venv .venv-docs || true
+	. .venv-docs/bin/activate; pip install -r mkdocs.yml/requirements.txt
+
+docs-build: docs-setup # Build docs locally with MkDocs
+	@echo "\n\n***************************** Docs Build... \n"
+	. .venv-docs/bin/activate; mkdocs build -f mkdocs.yml/mkdocs.yml
+
+docs-serve: docs-setup # Serve docs on localhost:8000
+	@echo "\n\n***************************** Docs Serve... \n"
+	. .venv-docs/bin/activate; mkdocs serve -f mkdocs.yml/mkdocs.yml -a 127.0.0.1:8000
+
+docs-test: # Build, serve, and probe the site locally
+	@echo "\n\n***************************** Docs Test... \n"
+	bash scripts/test-docs-local.sh

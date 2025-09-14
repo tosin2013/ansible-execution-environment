@@ -5,9 +5,18 @@ Example repository to build Ansible Execution Environments using a Makefile.
 TODO: Update docs to leverage new PIP_INDEX_URL environment variable option
 https://developers.redhat.com/articles/2025/01/27/how-manage-python-dependencies-ansible-execution-environments#python_dependency_management
 
+## Documentation
+
+- Docs Home: [docs/index.md](docs/index.md)
+- Tutorials: [Getting Started](docs/tutorials/getting-started.md)
+- How-To Guides: [Test Your EE](docs/how-to/testing-execution-environment.md), [Advanced Tasks](docs/how-to/advanced-usage.md), [CI/CD (Podman + Quay)](docs/how-to/ci-cd.md), [Build Docs Locally](docs/how-to/build-docs-locally.md)
+- Reference: [Tooling Reference](docs/reference/tooling.md)
+- Explanation: [Concepts](docs/explanation/concepts.md), [Technology Stack](docs/explanation/technology-stack.md), [Design Decisions](docs/explanation/design-decisions.md)
+
 ## Quick Start
 
 - Navigate to build server
+- Container engine: Podman is used throughout this repo and CI.
 - Optionally provision build server using [script](files/provision.sh)
 - Clone this repository
 - Customize
