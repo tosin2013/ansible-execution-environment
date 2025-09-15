@@ -16,7 +16,7 @@ ifndef $(SOURCE_TOKEN)
   $(error The environment variable ANSIBLE_HUB_TOKEN is undefined and required)
 endif
 
-.PHONY : header clean lint check build scan test publish list shell docs-setup docs-build docs-serve docs-test
+.PHONY : header clean lint check build scan test publish list shell docs-setup docs-build docs-serve docs-test token
 all: header clean lint build test publish
 
 header:
@@ -58,9 +58,9 @@ build: # Build the execution environment image
 	fi;
 	ansible-builder introspect --sanitize --user-pip=files/requirements.txt --user-bindep=files/bindep.txt 2>&1 | tee ansible-builder.log
 	ansible-builder build \
-		--tag $(TARGET_NAME):$(TARGET_TAG) \
-		--verbosity $(VERBOSITY) \
-		--container-runtime $(CONTAINER_ENGINE) 2>&1 | tee -a ansible-builder.log
+			--tag $(TARGET_NAME):$(TARGET_TAG) \
+			--verbosity $(VERBOSITY) \
+			--container-runtime $(CONTAINER_ENGINE) 2>&1 | tee -a ansible-builder.log
 
 scan: # Scan image for vulnerabilities https://www.redhat.com/sysadmin/using-quayio-scanner
 	@echo "\n\n***************************** Scanning... \n"
@@ -69,6 +69,10 @@ scan: # Scan image for vulnerabilities https://www.redhat.com/sysadmin/using-qua
 inspect: # Inspect built image to show information
 	@echo "\n\n***************************** Inspecting... \n"
 	$(CONTAINER_ENGINE) inspect $(TARGET_NAME):$(TARGET_TAG)
+
+list: # List the built image by name:tag
+	@echo "\n\n***************************** Images... \n"
+	$(CONTAINER_ENGINE) images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}\t{{.Size}}" --filter reference=$(TARGET_NAME):$(TARGET_TAG)
 
 test: # Run the example playbook using the built container image
 	@echo "\n\n***************************** Testing... \n"

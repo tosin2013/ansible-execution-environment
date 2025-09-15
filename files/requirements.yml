@@ -8,12 +8,12 @@
 # https://access.redhat.com/support/articles/ansible-automation-platform-certified-content
 
 collections:
-  - name: redhat_cop.aap_utilities  # aap
-  - name: infra.aap_configuration  # aap
-  - name: ansible.platform  # aap
+  # - name: redhat_cop.aap_utilities  # aap
+  # - name: infra.aap_configuration  # aap
+  # - name: ansible.platform  # aap (pulls kubernetes.core; requires openshift-clients on RHEL)
   - name: ansible.hub  # aap
   - name: ansible.controller  # aap
-  - name: ansible.eda  # aap
+  # - name: ansible.eda  # aap (may pull kubernetes.core)
   - name: amazon.aws  # cloud
   - name: azure.azcollection  # cloud
   # - name: community.vmware  # vmware

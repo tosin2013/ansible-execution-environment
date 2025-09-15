@@ -8,8 +8,10 @@ build_arg_defaults:
   ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--ignore-certs'
 
 dependencies:
-  # ansible_core:
-  #   package_pip: ansible-core==2.14.4
+  ansible_core:
+    package_pip: ansible-core==2.15.13
+  ansible_runner:
+    package_pip: ansible-runner==2.4.1
   galaxy: files/requirements.yml
   python: files/requirements.txt
   system: files/bindep.txt
@@ -25,6 +27,14 @@ additional_build_files:
   # Ansible Galaxy - critical for ansible-galaxy to work
   - src: ansible.cfg
     dest: configs
+  # Optional configs directory (ignored if empty). Place rhsm-activation.env here.
+  - src: files/optional-configs
+    dest: configs/optional
+  # Override install-from-bindep to ignore openshift-clients when repos are unavailable
+  - src: scripts/install-from-bindep
+    dest: scripts
+  - src: scripts/assemble
+    dest: scripts
     # - src: files/krb5.conf  # (Optional) Windows Authentication - Kerberos
     #   dest: configs
 
@@ -34,6 +44,48 @@ additional_build_steps:
     - RUN cat /etc/os-release
     - RUN echo PKGMGR = $PKGMGR, PYCMD = $PYCMD
     - RUN $PYCMD -m pip install --upgrade pip
+    - COPY _build/configs/optional /_extras/optional
+
+    # Optional: Install OpenShift CLI (oc/kubectl) via Red Hat repos using subscription-manager
+    # Provide credentials via files/optional-configs/rhsm-activation.env with:
+    #   RH_ORG=your_org
+    #   RH_ACT_KEY=your_activation_key
+    # This block is conditional and will be skipped if creds are not provided.
+    - >
+      RUN RH_ENV="/_extras/optional/rhsm-activation.env" ; \
+          if [ -f "$RH_ENV" ]; then set -a; . "$RH_ENV"; set +a; fi ; \
+          if [ -n "$RH_ORG" ] && [ -n "$RH_ACT_KEY" ]; then \
+            echo "==> Enabling OpenShift client repo via RHSM" && \
+            (command -v subscription-manager >/dev/null 2>&1 || $PKGMGR -y install subscription-manager || true) && \
+            subscription-manager register --org="$RH_ORG" --activationkey="$RH_ACT_KEY" && \
+            subscription-manager attach --auto || true && \
+            ARCH=$(uname -m) && \
+            (subscription-manager repos --enable="rhocp-4.15-for-rhel-9-${ARCH}-rpms" || \
+             subscription-manager repos --enable="rhocp-4.14-for-rhel-9-${ARCH}-rpms" || true) && \
+            ($PKGMGR -y install openshift-clients || true) ; \
+          else \
+            echo "==> Skipping OpenShift client repo enable (no RH_ORG/RH_ACT_KEY provided)" ; \
+          fi
+
+    # Optional: Install oc/kubectl from tarball (no RHSM required)
+    # Provide files/optional-configs/oc-install.env with either:
+    #   OC_VERSION=stable   # or v4.14.30, etc.
+    #   # or provide a direct URL
+    #   # OC_URL=https://mirror.openshift.com/pub/openshift-v4/clients/ocp/v4.14.30/openshift-client-linux.tar.gz
+    - >
+      RUN OC_ENV="/_extras/optional/oc-install.env" ; \
+          if [ -f "$OC_ENV" ]; then set -a; . "$OC_ENV"; set +a; fi ; \
+          if [ -n "$OC_URL" ] || [ -n "$OC_VERSION" ]; then \
+            echo "==> Installing oc/kubectl from tarball" && \
+            URL="${OC_URL:-https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux.tar.gz}" && \
+            ($PKGMGR -y install curl tar || true) && \
+            curl -L -o /tmp/oc.tgz "$URL" && \
+            tar -C /usr/local/bin -xzf /tmp/oc.tgz oc kubectl && \
+            chmod +x /usr/local/bin/oc /usr/local/bin/kubectl && \
+            rm -f /tmp/oc.tgz ; \
+          else \
+            echo "==> Skipping oc/kubectl install (no OC_URL/OC_VERSION)" ; \
+          fi
 
     # (Optional) Install Red Hat OpenShift client tools by enabling repo (prepare with manual steps below)
     # https://access.redhat.com/solutions/6985157
@@ -68,6 +120,14 @@ additional_build_steps:
     # Verify installed packages have compatible dependencies
     # Logged issue https://github.com/ansible/ansible-builder/issues/416
     - RUN pip3 check
+    # Optional: clean RHSM registration and repo files if present
+    - >
+      RUN if command -v subscription-manager >/dev/null 2>&1; then \
+            subscription-manager unregister || true && \
+            subscription-manager clean || true && \
+            rm -f /etc/yum.repos.d/redhat.repo && \
+            rm -rf /etc/rhsm/* ; \
+          fi
     # Clean up
     - >
       RUN $PKGMGR update -y &&

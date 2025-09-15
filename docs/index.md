@@ -37,6 +37,9 @@ Who this is for: new users; outcome: a working EE build.
 Practical guides for specific tasks and more advanced usage.
 - [How to Test Your Execution Environment](how-to/testing-execution-environment.md)
 - [How to Add Windows Support](how-to/add-windows-support.md)
+- [Build Locally with Makefile and Podman](how-to/build-locally.md)
+- [Enable Kubernetes and OpenShift Tooling](how-to/enable-kubernetes-openshift.md)
+- [Troubleshoot EE Builds](how-to/troubleshoot-ee-builds.md)
 - [Advanced Usage Guide](how-to/advanced-usage.md)
 - [CI/CD with GitHub Actions and Tekton](how-to/ci-cd.md)
 - [Optional llms.txt Manifest](how-to/llms-txt.md)
@@ -46,6 +49,9 @@ Who this is for: practitioners executing tasks; outcome: one concrete result per
 ## 📖 Information-Oriented: Reference
 
 Detailed technical reference for the tools and configuration.
+- [Optional Configs and Secrets](reference/optional-configs-and-secrets.md)
+- [Make Targets and Variables](reference/make-targets.md)
+- [execution-environment.yml Reference](reference/execution-environment-yaml.md)
 - [Tooling Reference](reference/tooling.md)
 Who this is for: readers needing exact options and commands.
 
@@ -55,4 +61,5 @@ Conceptual documentation to understand the underlying architecture and design.
 - [Execution Environment Concepts](explanation/concepts.md)
 - [Technology Stack](explanation/technology-stack.md)
 - [Design Decisions](explanation/design-decisions.md)
+- [Why Keep execution-environment.yml Minimal](explanation/execution-environment-yaml-design.md)
 Who this is for: decision-makers and maintainers; outcome: understand trade-offs and rationale.

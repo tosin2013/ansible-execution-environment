@@ -10,7 +10,11 @@ https://developers.redhat.com/articles/2025/01/27/how-manage-python-dependencies
 - Docs Home: [docs/index.md](docs/index.md)
 - Tutorials: [Getting Started](docs/tutorials/getting-started.md)
 - How-To Guides: [Test Your EE](docs/how-to/testing-execution-environment.md), [Advanced Tasks](docs/how-to/advanced-usage.md), [CI/CD (Podman + Quay)](docs/how-to/ci-cd.md), [Build Docs Locally](docs/how-to/build-docs-locally.md)
+- How-To: [Enable Kubernetes and OpenShift](docs/how-to/enable-kubernetes-openshift.md)
+- How-To: [Troubleshoot EE Builds](docs/how-to/troubleshoot-ee-builds.md)
 - Reference: [Tooling Reference](docs/reference/tooling.md)
+- Reference: [Optional Configs and Secrets](docs/reference/optional-configs-and-secrets.md)
+- Reference: [Make Targets and Variables](docs/reference/make-targets.md)
 - Explanation: [Concepts](docs/explanation/concepts.md), [Technology Stack](docs/explanation/technology-stack.md), [Design Decisions](docs/explanation/design-decisions.md)
 
 ## Quick Start

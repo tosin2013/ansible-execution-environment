@@ -10,6 +10,7 @@ This tutorial provides a step-by-step guide to building a custom Ansible Executi
 
 - A build server with `podman` and `git` installed. The `files/provision.sh` script can be used to prepare a RHEL-based system.
 - An `ANSIBLE_HUB_TOKEN` environment variable must be set to authenticate with the Red Hat Automation Hub for downloading certified collections. This is not required for public collections from Ansible Galaxy.
+- Keep tokens and secrets out of git. Use a local `token` file and export it before builds.
 
 ## Step 1: Clone the Repository
 
@@ -77,7 +78,12 @@ You can change this to use a different base image if needed.
 The `Makefile` provides a simple way to build the image. It will use `ansible-builder` to combine the base image with your specified dependencies.
 
 ```bash
+export ANSIBLE_HUB_TOKEN=$(cat token)
+make token    # optional prefetch/validation of Galaxy/Hub access
 make build
+
+# Validate the image exists locally
+podman images --filter reference=ansible-ee-minimal:v5
 ```
 This will create a new container image. By default, as defined in the `Makefile`, this image will be tagged as `ansible-ee-minimal:v5`.
 
@@ -90,3 +96,20 @@ make test
 ```
 
 This command uses `ansible-navigator` to run `files/playbook.yml` inside the new execution environment, confirming it is functional.
+
+## Optional: Enable Kubernetes/OpenShift Tooling
+
+If you need the `kubernetes.core` or `redhat.openshift` collections and the `oc`/`kubectl` CLIs:
+
+- Recommended (no RHSM needed):
+  1) Create `files/optional-configs/oc-install.env` with `OC_VERSION=stable-4.19` (or a pinned version like `v4.19.6`).
+  2) Uncomment `kubernetes.core` in `files/requirements.yml`.
+  3) Rebuild: `make build`
+  4) Verify: `podman run --rm ansible-ee-minimal:v5 oc version --client`
+
+- With RHSM (RPM path):
+  1) Create `files/optional-configs/rhsm-activation.env` with `RH_ORG` and `RH_ACT_KEY`.
+  2) Uncomment `kubernetes.core` (and optionally `redhat.openshift`).
+  3) Rebuild: `make build`
+
+See the detailed guide: [Enable Kubernetes and OpenShift Tooling](../how-to/enable-kubernetes-openshift.md)
