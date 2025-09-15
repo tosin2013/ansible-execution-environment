@@ -12,7 +12,7 @@ When to use
 - You publish this repo publicly and want a clear policy document in the root.
 
 Steps
-1) Install the CLI following the official guide: https://llmstxt.org/intro.html#cli
+1) Install the CLI following the official guide: https://llmstxt.org/intro.html `pip install llms-txt`
 2) From the repo root, initialize a manifest (example only):
    - Decide which paths to allow (e.g., `docs/`, `README.md`).
    - Deny sensitive paths (e.g., `files/krb5.conf`, any credential samples).
