@@ -63,6 +63,9 @@ jobs:
           echo "Created oc-install.env for Path B testing with OC_VERSION=latest-4.19"
           # Ensure no RHSM config exists
           rm -f files/optional-configs/rhsm-activation.env
+          # Keep Kubernetes collections commented out for Path B (binaries only, no collections)
+          sed -i 's/^  - name: kubernetes.core/#  - name: kubernetes.core/' files/requirements.yml || true
+          sed -i 's/^  - name: redhat.openshift/#  - name: redhat.openshift/' files/requirements.yml || true
 
       - name: Build with Path B (Tarball)
         env:

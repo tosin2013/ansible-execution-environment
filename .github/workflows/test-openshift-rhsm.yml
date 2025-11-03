@@ -80,6 +80,9 @@ jobs:
           echo "Created rhsm-activation.env for Path A testing"
           # Ensure no tarball config exists
           rm -f files/optional-configs/oc-install.env
+          # Uncomment Kubernetes collections for Path A (RHSM enables the repos)
+          sed -i 's/^  # - name: kubernetes.core/  - name: kubernetes.core/' files/requirements.yml || true
+          sed -i 's/^  # - name: redhat.openshift/  - name: redhat.openshift/' files/requirements.yml || true
 
       - name: Build with Path A (RHSM)
         if: steps.check-creds.outputs.missing-creds == 'false'
