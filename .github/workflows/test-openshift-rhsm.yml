@@ -33,7 +33,7 @@ jobs:
     name: Test OpenShift RHSM (Path A)
     runs-on: ubuntu-latest
     # Only run if RHSM credentials are provided
-    if: ${{ secrets.RH_ORG && secrets.RH_ACT_KEY }}
+    if: ${{ secrets.RH_ORG != '' && secrets.RH_ACT_KEY != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,7 +51,7 @@ jobs:
           pip install ansible-builder ansible-navigator
 
       - name: Log in to registry.redhat.io (Podman)
-        if: ${{ secrets.REDHAT_REGISTRY_USERNAME && secrets.REDHAT_REGISTRY_PASSWORD }}
+        if: ${{ secrets.REDHAT_REGISTRY_USERNAME != '' && secrets.REDHAT_REGISTRY_PASSWORD != '' }}
         run: |
           echo "$REDHAT_REGISTRY_PASSWORD" | podman login registry.redhat.io \
             --username "$REDHAT_REGISTRY_USERNAME" --password-stdin
