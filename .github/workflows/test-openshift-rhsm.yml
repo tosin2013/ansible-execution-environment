@@ -35,6 +35,8 @@ jobs:
     env:
       RH_ORG: ${{ secrets.RH_ORG }}
       RH_ACT_KEY: ${{ secrets.RH_ACT_KEY }}
+      REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
+      REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,10 +66,8 @@ jobs:
           pip install ansible-builder ansible-navigator
 
       - name: Log in to registry.redhat.io (Podman)
-        if: ${{ steps.check-creds.outputs.missing-creds == 'false' && secrets.REDHAT_REGISTRY_USERNAME != '' && secrets.REDHAT_REGISTRY_PASSWORD != '' }}
+        if: ${{ steps.check-creds.outputs.missing-creds == 'false' && env.REDHAT_REGISTRY_USERNAME != '' && env.REDHAT_REGISTRY_PASSWORD != '' }}
         env:
-          REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
-          REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
           CONTAINER_ENGINE: ${{ env.CONTAINER_ENGINE }}
         run: ./scripts/login-registry.sh $CONTAINER_ENGINE
 
