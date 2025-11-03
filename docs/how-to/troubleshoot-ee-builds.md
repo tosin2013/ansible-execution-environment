@@ -41,6 +41,22 @@ Fix:
 - We attempt `($PKGMGR -y install curl tar || true)` in the tarball path. If needed, prefer `curl-minimal` (already present on UBI) and skip `curl`.
 - Build still proceeds because the download usually succeeds.
 
+### "No module named pip" error
+
+Symptom: Build fails with `/usr/bin/python3: No module named pip` during the assemble step.
+
+Cause: The base image `registry.redhat.io/ansible-automation-platform-25/ee-minimal-rhel9:latest` is a minimal image that does not include `python3-pip` by default. When `ansible-builder` runs the assemble script to install Python packages, pip is not available.
+
+Fix:
+- Add `python3-pip` to system dependencies in `files/bindep.txt`:
+  ```
+  python3-pip [platform:rpm]
+  ```
+- Rebuild: `make clean && make build`
+- This ensures pip is installed during the build process before Python packages are installed.
+
+Reference: [Red Hat Solution 7116301](https://access.redhat.com/solutions/7116301)
+
 ### Pip cannot find ansible-core version
 
 Cause: Base image Python version may not match latest ansible-core.
