@@ -2,7 +2,7 @@
 ---
 name: Test OpenShift Tooling - RHSM (Path A)
 
-'on':
+on:
   push:
     branches: [main]
     paths:

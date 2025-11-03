@@ -2,7 +2,7 @@
 ---
 name: Test OpenShift Tooling - Tarball (Path B)
 
-'on':
+on:
   push:
     branches: [main]
     paths:
