@@ -63,9 +63,6 @@ jobs:
         run: |
           echo "$REDHAT_REGISTRY_PASSWORD" | podman login registry.redhat.io \
             --username "$REDHAT_REGISTRY_USERNAME" --password-stdin
-        env:
-          REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
-          REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
 
       - name: Log in to Quay (Podman)
         run: |
