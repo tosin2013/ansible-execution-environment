@@ -50,12 +50,11 @@ jobs:
 
       - name: Log in to registry.redhat.io (Podman)
         if: ${{ secrets.REDHAT_REGISTRY_USERNAME != '' && secrets.REDHAT_REGISTRY_PASSWORD != '' }}
-        run: |
-          echo "$REDHAT_REGISTRY_PASSWORD" | podman login registry.redhat.io \
-            --username "$REDHAT_REGISTRY_USERNAME" --password-stdin
         env:
           REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
           REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
+          CONTAINER_ENGINE: ${{ env.CONTAINER_ENGINE }}
+        run: ./scripts/login-registry.sh $CONTAINER_ENGINE
 
       - name: Setup Path B (Tarball) Configuration
         run: |
