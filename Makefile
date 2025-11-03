@@ -293,6 +293,7 @@ test: # Run the example playbook using the built container image
 		files/playbook.yml \
 		--container-engine $(CONTAINER_ENGINE) \
 		--mode stdout \
+		--pull-policy never \
 		--execution-environment-image $(TARGET_NAME):$(TARGET_TAG)
 
 info: # Produce information about the published container image that can be used as the README in AAP
