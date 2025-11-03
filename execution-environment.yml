@@ -8,8 +8,6 @@ build_arg_defaults:
   ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--ignore-certs'
 
 dependencies:
-  ansible_core:
-    package_pip: ansible-core==2.16.14
   ansible_runner:
     package_pip: ansible-runner==2.4.1
   galaxy: files/requirements.yml
