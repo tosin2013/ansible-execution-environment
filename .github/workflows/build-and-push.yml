@@ -17,6 +17,9 @@ env:
 jobs:
   build-publish:
     runs-on: ubuntu-latest
+    env:
+      REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
+      REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,7 +37,7 @@ jobs:
           pip install ansible-builder ansible-navigator
 
       - name: Log in to registry.redhat.io (Podman)
-        if: ${{ secrets.REDHAT_REGISTRY_USERNAME && secrets.REDHAT_REGISTRY_PASSWORD }}
+        if: ${{ env.REDHAT_REGISTRY_USERNAME != '' && env.REDHAT_REGISTRY_PASSWORD != '' }}
         run: |
           echo "$REDHAT_REGISTRY_PASSWORD" | podman login registry.redhat.io \
             --username "$REDHAT_REGISTRY_USERNAME" --password-stdin
