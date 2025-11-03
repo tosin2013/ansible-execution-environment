@@ -63,9 +63,9 @@ fi
 echo ""
 echo "Test 5: Checking for kubernetes.core collection (optional)..."
 if command -v ansible-navigator >/dev/null 2>&1; then
-    if ansible-navigator collections --mode stdout --eei "$IMAGE" --container-engine "$CONTAINER_ENGINE" 2>&1 | grep -q "kubernetes.core"; then
+    if ansible-navigator collections --mode stdout --pull-policy never --eei "$IMAGE" --container-engine "$CONTAINER_ENGINE" 2>&1 | grep -q "kubernetes.core"; then
         echo "✓ kubernetes.core collection found"
-        ansible-navigator collections --mode stdout --eei "$IMAGE" --container-engine "$CONTAINER_ENGINE" 2>&1 | grep "kubernetes.core"
+        ansible-navigator collections --mode stdout --pull-policy never --eei "$IMAGE" --container-engine "$CONTAINER_ENGINE" 2>&1 | grep "kubernetes.core"
     else
         echo "⚠ kubernetes.core collection not found (binaries work independently - collections are optional)"
         echo "  To enable: uncomment 'kubernetes.core' in files/requirements.yml"
