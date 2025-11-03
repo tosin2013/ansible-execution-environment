@@ -23,20 +23,28 @@ https://developers.redhat.com/articles/2025/01/27/how-manage-python-dependencies
 - Container engine: Podman is used throughout this repo and CI.
 - Optionally provision build server using [script](files/provision.sh)
 - Clone this repository
+- **Verify environment setup:** `make setup` (checks for required tools and provides installation guidance)
 - Customize
   - Edit dependencies `requirements.yml`, `requirements.txt`, `bindep.txt`
-  - Set token environment variable `ANSIBLE_HUB_TOKEN`
+  - Set token environment variable `ANSIBLE_HUB_TOKEN` (only needed for build/token targets)
   - Edit `execution-environment.yml` accordingly
   - Edit `Makefile` variables
 - Cleanup with `make clean`
-- Test token with `make token`
-- Build it `make build`
-- Test it `make test`
+- Test token with `make token` (requires `ANSIBLE_HUB_TOKEN`)
+- Build it `make build` (requires `ANSIBLE_HUB_TOKEN`)
+- Test it `make test` (does not require token - uses locally built image)
 - Inspect it `make inspect`
 - Review it `make info`
 - (Optional) Look inside `make shell`
 - Publish it `make publish`
 - Enjoy your day
+
+**Key Insights:**
+- **First-time setup:** Run `make setup` to verify your environment before building
+- **Token requirements:** Only `make build` and `make token` require `ANSIBLE_HUB_TOKEN`
+- **Python version:** Ensure Python 3.10+ (Python 3.11 recommended on RHEL 9)
+- **System dependencies:** The minimal base image requires `python3-pip` in `bindep.txt`
+- **Testing:** The `make test` target uses `--pull-policy never` to use locally built images
 
 ## Find and Test Image
 

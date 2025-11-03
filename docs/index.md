@@ -26,6 +26,31 @@ While you can build Execution Environments from scratch, this repository provide
 
 This documentation will guide you through understanding, using, and extending this framework.
 
+## ⚡ Quick Reference for New Users
+
+**First Steps:**
+1. Clone the repository
+2. Run `make setup` to verify your environment
+3. Set `ANSIBLE_HUB_TOKEN` environment variable (for certified collections)
+4. Run `make build` to create your execution environment
+5. Run `make test` to verify it works
+
+**Key Insights:**
+- ✅ `make setup` - Verify environment before building (catches issues early)
+- ✅ Python 3.10+ required - Python 3.11 recommended on RHEL 9
+- ✅ `python3-pip` must be in `bindep.txt` - Minimal images don't include pip by default
+- ✅ Token only needed for `build`/`token` - `test`/`setup`/`lint` work without token
+- ✅ Use `--pull-policy never` - Ensures local images are used for testing
+- ✅ Minimal images are minimal - Use `test -f` instead of `which` command
+
+**Common Issues:**
+- "No module named pip" → Add `python3-pip [platform:rpm]` to `files/bindep.txt`
+- Token errors on test → Token check now only runs when needed
+- Image pull errors → Test target uses `--pull-policy never`
+- Missing `which` command → Use `test -f /path/to/binary` instead
+
+See [Troubleshoot EE Builds](how-to/troubleshoot-ee-builds.md) for detailed solutions.
+
 ## 📚 Learning-Oriented: Tutorials
 
 Start here to build your first custom Execution Environment.

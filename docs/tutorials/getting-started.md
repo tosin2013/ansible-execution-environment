@@ -21,7 +21,26 @@ git clone https://github.com/tosin2013/ansible-execution-environment.git
 cd ansible-execution-environment
 ```
 
-## Step 2: Customize Dependencies
+## Step 2: Verify Development Environment Setup
+
+Before building, verify your development environment has all required tools installed:
+
+```bash
+# This will check for required tools and provide installation instructions if needed
+make setup
+```
+
+**What `make setup` checks:**
+- Required system packages: `podman`, `python3`, `git`, `jq`, `envsubst` (via `gettext`)
+- Python version: Validates Python 3.10+ requirement for `ansible-navigator`
+- Ansible Automation Platform tools: `ansible-builder`, `ansible-navigator`, `ansible-core`
+- Environment variables: Warns if `ANSIBLE_HUB_TOKEN` is not set
+
+**On RHEL systems:** The setup target provides RHEL-specific installation instructions using RPM packages when available, which is the recommended approach.
+
+**Insight:** Running `make setup` first helps catch environment issues before attempting builds, saving time and frustration.
+
+## Step 3: Customize Dependencies
 
 The core of your execution environment is defined by its dependencies.
 
@@ -61,7 +80,7 @@ git   [platform:rpm]
 # krb5-workstation [platform:rpm]
 ```
 
-## Step 3: Configure the Build
+## Step 4: Configure the Build
 
 The `execution-environment.yml` file defines the build process. The default base image is:
 
@@ -73,7 +92,7 @@ images:
 
 You can change this to use a different base image if needed.
 
-## Step 4: Build the Image
+## Step 5: Build the Image
 
 The `Makefile` provides a simple way to build the image. It will use `ansible-builder` to combine the base image with your specified dependencies.
 
@@ -87,7 +106,7 @@ podman images --filter reference=ansible-ee-minimal:v5
 ```
 This will create a new container image. By default, as defined in the `Makefile`, this image will be tagged as `ansible-ee-minimal:v5`.
 
-## Step 5: Test the Image
+## Step 6: Test the Image
 
 After the build, run the included test playbook.
 

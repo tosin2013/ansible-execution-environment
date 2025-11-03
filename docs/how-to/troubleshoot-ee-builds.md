@@ -88,8 +88,55 @@ ansible-galaxy collection download -r files/requirements.yml -p "$tmp"
 rg -n "openshift-clients" "$tmp"/**/bindep.txt
 ```
 
+## Common Pitfalls and Solutions
+
+### Environment Setup Issues
+
+**Problem:** Build fails with missing tools or wrong Python version.
+
+**Solution:**
+- Run `make setup` first to verify environment
+- On RHEL 9, install Python 3.11: `sudo dnf install -y python3.11 python3.11-pip`
+- Install missing tools using the instructions provided by `make setup`
+
+**Insight:** Always verify your environment before building. The `make setup` target catches issues early.
+
+### Token Check Errors
+
+**Problem:** `make test` fails with "ANSIBLE_HUB_TOKEN is undefined" even though you only want to test.
+
+**Solution:**
+- This is fixed! Token check now only runs for `build` and `token` targets
+- `make test`, `make setup`, `make lint` can run without `ANSIBLE_HUB_TOKEN`
+- Only `make build` and `make token` require the token
+
+**Insight:** Token requirements are now execution-time, not parse-time, allowing more flexible workflows.
+
+### Image Pull Errors During Testing
+
+**Problem:** `make test` tries to pull image from registry and fails with connection errors.
+
+**Solution:**
+- Fixed! The `test` target now uses `--pull-policy never`
+- Ensures locally built images are used
+- Prevents registry connection errors during local testing
+
+**Insight:** Always test locally built images before pushing to registries.
+
+### Minimal Image Limitations
+
+**Problem:** Commands like `which` don't work in minimal base images.
+
+**Solution:**
+- Use `test -f` instead of `which` for checking binary existence
+- The test scripts have been updated to use `test -f` for compatibility
+- When writing custom scripts, prefer `test -f /path/to/binary` over `which binary`
+
+**Insight:** Minimal images are intentionally small - use standard POSIX commands (`test`, `ls`, `stat`) instead of utilities like `which`.
+
 ## When to ask for help
 
 - Share the last 100–200 lines of `ansible-builder.log` and your `files/requirements.yml` diff.
 - Include your chosen path (RPM vs tarball) and whether proxies are in use.
+- Include output from `make setup` if environment issues are suspected.
 

@@ -84,18 +84,31 @@ make build
 
 What happens:
 - The build downloads `openshift-client-linux.tar.gz` from mirror.openshift.com for the requested version and installs `oc` and `kubectl` into `/usr/local/bin`.
+- Symlinks are created in `/usr/bin` for compatibility with Ansible modules and tools that expect binaries in the standard location.
 - The EE intentionally filters the `openshift-clients` RPM from bindep to avoid failing without RHSM.
+
+**Insight:** The symlinks ensure maximum compatibility - binaries are installed in `/usr/local/bin` (standard for tarball installs) but also accessible via `/usr/bin` (expected by some Ansible modules).
 
 Notes:
 - **Collections are optional**: You can use `oc`/`kubectl` binaries without installing `kubernetes.core` or `redhat.openshift` collections.
 
 ## Step 2: Verify
 
+```bash
+# Check if binaries exist (minimal images may not have 'which' command)
+podman run --rm ansible-ee-minimal:v5 test -f /usr/local/bin/oc && echo "✓ oc found"
+podman run --rm ansible-ee-minimal:v5 test -f /usr/bin/oc && echo "✓ oc symlink found"
+podman run --rm ansible-ee-minimal:v5 /usr/local/bin/oc version --client
+podman run --rm ansible-ee-minimal:v5 /usr/local/bin/kubectl version --client
+
+# Or use the test script
+make test-openshift-tooling
+
+# Check collections (if installed)
+ansible-navigator collections --mode stdout --pull-policy never --eei ansible-ee-minimal:v5 | grep kubernetes.core
 ```
-podman run --rm ansible-ee-minimal:v5 which oc kubectl
-podman run --rm ansible-ee-minimal:v5 oc version --client
-ansible-navigator collections --mode stdout --eei ansible-ee-minimal:v5 | grep kubernetes.core
-```
+
+**Note:** The test script (`scripts/test-openshift-tooling.sh`) uses `test -f` instead of `which` since minimal base images don't include the `which` command. This makes testing more reliable across different image types.
 
 ## Step 3: Two-Phase Testing
 
@@ -161,10 +174,15 @@ This ensures:
 
 The project includes a dedicated test script (`scripts/test-openshift-tooling.sh`) that verifies:
 
-1. `oc` and `kubectl` binaries exist and are executable
+1. `oc` and `kubectl` binaries exist and are executable (checks `/usr/local/bin` and `/usr/bin`)
 2. Version commands work correctly
 3. `kubernetes.core` collection is installed (if configured)
 4. Binary permissions are correct
+
+**Key implementation details:**
+- Uses `test -f` instead of `which` command (minimal images don't include `which`)
+- Checks both `/usr/local/bin` and `/usr/bin` for maximum compatibility
+- Uses `--pull-policy never` when calling `ansible-navigator` to ensure local images are used
 
 You can run it directly:
 ```bash
