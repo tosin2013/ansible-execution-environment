@@ -60,8 +60,8 @@ additional_build_steps:
             subscription-manager register --org="$RH_ORG" --activationkey="$RH_ACT_KEY" && \
             subscription-manager attach --auto || true && \
             ARCH=$(uname -m) && \
-            (subscription-manager repos --enable="rhocp-4.15-for-rhel-9-${ARCH}-rpms" || \
-             subscription-manager repos --enable="rhocp-4.14-for-rhel-9-${ARCH}-rpms" || true) && \
+            (subscription-manager repos --enable="rhocp-4.18-for-rhel-9-${ARCH}-rpms" || \
+             subscription-manager repos --enable="rhocp-4.17-for-rhel-9-${ARCH}-rpms" || true) && \
             ($PKGMGR -y install openshift-clients || true) ; \
           else \
             echo "==> Skipping OpenShift client repo enable (no RH_ORG/RH_ACT_KEY provided)" ; \
