@@ -20,11 +20,28 @@ jobs:
   build-publish:
     runs-on: ubuntu-latest
     env:
-      REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
-      REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
+      TARGET_NAME: ${{ secrets.TARGET_NAME || 'ansible-ee-minimal' }}
+      TARGET_HUB: ${{ secrets.TARGET_HUB || 'quay.io' }}
+      CONTAINER_ENGINE: podman
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Determine Target Tag
+        id: tag
+        run: |
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            # If it's a git tag, use it as the image tag
+            TAG="${{ github.ref_name }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            # If it's main branch, use 'latest'
+            TAG="latest"
+          else
+            # For other branches or PRs, use branch name or 'dev'
+            TAG="${{ github.ref_name }}"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "Using image tag: ${TAG}"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,6 +57,9 @@ jobs:
 
       - name: Log in to registry.redhat.io (Podman)
         if: ${{ env.REDHAT_REGISTRY_USERNAME != '' && env.REDHAT_REGISTRY_PASSWORD != '' }}
+        env:
+          REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
+          REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
         run: |
           echo "$REDHAT_REGISTRY_PASSWORD" | podman login registry.redhat.io \
             --username "$REDHAT_REGISTRY_USERNAME" --password-stdin
@@ -60,17 +80,17 @@ jobs:
           ANSIBLE_HUB_TOKEN: ${{ secrets.ANSIBLE_HUB_TOKEN }}
         run: |
           make clean
-          TARGET_NAME="$TARGET_NAME" TARGET_TAG="$TARGET_TAG" CONTAINER_ENGINE=$CONTAINER_ENGINE \
+          TARGET_NAME="${{ env.TARGET_NAME }}" TARGET_TAG="${{ steps.tag.outputs.tag }}" CONTAINER_ENGINE=$CONTAINER_ENGINE \
             make build
 
       - name: Test
         env:
           ANSIBLE_HUB_TOKEN: ${{ secrets.ANSIBLE_HUB_TOKEN }}
         run: |
-          TARGET_NAME="$TARGET_NAME" TARGET_TAG="$TARGET_TAG" CONTAINER_ENGINE=$CONTAINER_ENGINE \
+          TARGET_NAME="${{ env.TARGET_NAME }}" TARGET_TAG="${{ steps.tag.outputs.tag }}" CONTAINER_ENGINE=$CONTAINER_ENGINE \
             make test
 
       - name: Publish
         run: |
-          TARGET_NAME="$TARGET_NAME" TARGET_TAG="$TARGET_TAG" CONTAINER_ENGINE=$CONTAINER_ENGINE \
+          TARGET_NAME="${{ env.TARGET_NAME }}" TARGET_TAG="${{ steps.tag.outputs.tag }}" CONTAINER_ENGINE=$CONTAINER_ENGINE \
             make publish
