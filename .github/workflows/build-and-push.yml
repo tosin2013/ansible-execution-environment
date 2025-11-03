@@ -10,8 +10,10 @@ name: Build and Publish EE (Podman)
 
 env:
   # Change this to your Quay repository path: <org>/<repo>
-  TARGET_NAME: yourorg/ansible-ee-minimal
-  TARGET_TAG: v5
+  # Or override via: TARGET_HUB, TARGET_NAME, TARGET_TAG
+  TARGET_NAME: ${{ secrets.TARGET_NAME || 'ansible-ee-minimal' }}
+  TARGET_TAG: ${{ secrets.TARGET_TAG || 'v5' }}
+  TARGET_HUB: ${{ secrets.TARGET_HUB || 'quay.io' }}
   CONTAINER_ENGINE: podman
 
 jobs:
