@@ -27,6 +27,8 @@ on:
 env:
   TARGET_NAME: ansible-ee-minimal
   CONTAINER_ENGINE: podman
+  REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
+  REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
 
 jobs:
   test-openshift-tarball:
@@ -49,10 +51,8 @@ jobs:
           pip install ansible-builder ansible-navigator
 
       - name: Log in to registry.redhat.io (Podman)
-        if: ${{ secrets.REDHAT_REGISTRY_USERNAME != '' && secrets.REDHAT_REGISTRY_PASSWORD != '' }}
+        if: ${{ env.REDHAT_REGISTRY_USERNAME != '' && env.REDHAT_REGISTRY_PASSWORD != '' }}
         env:
-          REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
-          REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
           CONTAINER_ENGINE: ${{ env.CONTAINER_ENGINE }}
         run: ./scripts/login-registry.sh $CONTAINER_ENGINE
 
