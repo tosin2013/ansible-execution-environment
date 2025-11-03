@@ -69,7 +69,7 @@ additional_build_steps:
 
     # Optional: Install oc/kubectl from tarball (no RHSM required)
     # Provide files/optional-configs/oc-install.env with either:
-    #   OC_VERSION=stable   # or v4.14.30, etc.
+    #   OC_VERSION=v4.19   # or v4.14, v4.18, etc.
     #   # or provide a direct URL
     #   # OC_URL=https://mirror.openshift.com/pub/openshift-v4/clients/ocp/v4.14.30/openshift-client-linux.tar.gz
     - >
@@ -77,11 +77,21 @@ additional_build_steps:
           if [ -f "$OC_ENV" ]; then set -a; . "$OC_ENV"; set +a; fi ; \
           if [ -n "$OC_URL" ] || [ -n "$OC_VERSION" ]; then \
             echo "==> Installing oc/kubectl from tarball" && \
+            echo "    OC_VERSION=$OC_VERSION" && \
+            echo "    OC_URL=$OC_URL" && \
             URL="${OC_URL:-https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux.tar.gz}" && \
+            echo "    Final URL=$URL" && \
             ($PKGMGR -y install curl tar || true) && \
-            curl -L -o /tmp/oc.tgz "$URL" && \
+            echo "==> Downloading tarball..." && \
+            curl -L -v -o /tmp/oc.tgz "$URL" 2>&1 | tail -20 && \
+            echo "==> Extracting tarball..." && \
             tar -C /usr/local/bin -xzf /tmp/oc.tgz oc kubectl && \
+            echo "==> Setting executable permissions..." && \
             chmod +x /usr/local/bin/oc /usr/local/bin/kubectl && \
+            echo "==> Verifying installation..." && \
+            /usr/local/bin/oc version --client && \
+            /usr/local/bin/kubectl version --client && \
+            echo "==> Cleanup..." && \
             rm -f /tmp/oc.tgz ; \
           else \
             echo "==> Skipping oc/kubectl install (no OC_URL/OC_VERSION)" ; \
