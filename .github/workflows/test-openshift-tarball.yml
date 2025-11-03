@@ -1,0 +1,88 @@
+# Test OpenShift/Kubernetes Tooling - Path B (Tarball Install)
+---
+name: Test OpenShift Tooling - Tarball (Path B)
+
+'on':
+  push:
+    branches: [main]
+    paths:
+      - 'execution-environment.yml'
+      - 'files/requirements.yml'
+      - 'files/bindep.txt'
+      - 'scripts/install-from-bindep'
+      - 'scripts/assemble'
+      - 'scripts/test-openshift-tooling.sh'
+      - '.github/workflows/test-openshift-tarball.yml'
+  pull_request:
+    paths:
+      - 'execution-environment.yml'
+      - 'files/requirements.yml'
+      - 'files/bindep.txt'
+      - 'scripts/install-from-bindep'
+      - 'scripts/assemble'
+      - 'scripts/test-openshift-tooling.sh'
+      - '.github/workflows/test-openshift-tarball.yml'
+  workflow_dispatch:
+
+env:
+  TARGET_NAME: ansible-ee-minimal
+  CONTAINER_ENGINE: podman
+
+jobs:
+  test-openshift-tarball:
+    name: Test OpenShift Tarball (Path B)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install tooling (Podman + Ansible)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext-base podman
+          python -m pip install --upgrade pip
+          pip install ansible-builder ansible-navigator
+
+      - name: Log in to registry.redhat.io (Podman)
+        if: ${{ secrets.REDHAT_REGISTRY_USERNAME && secrets.REDHAT_REGISTRY_PASSWORD }}
+        run: |
+          echo "$REDHAT_REGISTRY_PASSWORD" | podman login registry.redhat.io \
+            --username "$REDHAT_REGISTRY_USERNAME" --password-stdin
+        env:
+          REDHAT_REGISTRY_USERNAME: ${{ secrets.REDHAT_REGISTRY_USERNAME }}
+          REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
+
+      - name: Setup Path B (Tarball) Configuration
+        run: |
+          mkdir -p files/optional-configs
+          echo "OC_VERSION=stable-4.19" > files/optional-configs/oc-install.env
+          echo "Created oc-install.env for Path B testing"
+          # Ensure no RHSM config exists
+          rm -f files/optional-configs/rhsm-activation.env
+
+      - name: Build with Path B (Tarball)
+        env:
+          ANSIBLE_HUB_TOKEN: ${{ secrets.ANSIBLE_HUB_TOKEN }}
+        run: |
+          make clean
+          TARGET_NAME="$TARGET_NAME" TARGET_TAG="test-tarball" CONTAINER_ENGINE=$CONTAINER_ENGINE \
+            make build-openshift-tarball
+
+      - name: Test Path B (Tarball)
+        env:
+          ANSIBLE_HUB_TOKEN: ${{ secrets.ANSIBLE_HUB_TOKEN }}
+        run: |
+          TARGET_NAME="$TARGET_NAME" TARGET_TAG="test-tarball" CONTAINER_ENGINE=$CONTAINER_ENGINE \
+            make test-openshift-tooling
+
+      - name: Run Standard Playbook Test
+        env:
+          ANSIBLE_HUB_TOKEN: ${{ secrets.ANSIBLE_HUB_TOKEN }}
+        run: |
+          TARGET_NAME="$TARGET_NAME" TARGET_TAG="test-tarball" CONTAINER_ENGINE=$CONTAINER_ENGINE \
+            make test

@@ -29,13 +29,15 @@ RH_ORG=<your_org>
 RH_ACT_KEY=<your_activation_key>
 ```
 
-2) Uncomment collections in `files/requirements.yml` as needed:
+2) **Optional**: Uncomment collections in `files/requirements.yml` if you need Ansible modules:
 
 ```
 # containers
 - name: kubernetes.core
 # - name: redhat.openshift
 ```
+
+**Note**: The `oc`/`kubectl` binaries are installed independently via `execution-environment.yml`. Collections are optional and provide Ansible modules that use the binaries.
 
 3) Build:
 
@@ -50,6 +52,7 @@ What happens:
 
 Notes:
 - Your activation key must attach a subscription that includes the OpenShift client repo. If not, the repo enable step is skipped.
+- **Collections are optional**: You can use `oc`/`kubectl` binaries without installing `kubernetes.core` or `redhat.openshift` collections.
 
 ### Path B — Tarball install (no RHSM required)
 
@@ -62,13 +65,15 @@ Use this if you do not have RHSM entitlements or want a simpler, portable build.
 OC_VERSION=stable-4.19
 ```
 
-2) Uncomment collections in `files/requirements.yml` as needed:
+2) **Optional**: Uncomment collections in `files/requirements.yml` if you need Ansible modules:
 
 ```
 # containers
 - name: kubernetes.core
 # - name: redhat.openshift
 ```
+
+**Note**: The `oc`/`kubectl` binaries are installed independently via `execution-environment.yml`. Collections are optional and provide Ansible modules that use the binaries.
 
 3) Build:
 
@@ -81,12 +86,89 @@ What happens:
 - The build downloads `openshift-client-linux.tar.gz` from mirror.openshift.com for the requested version and installs `oc` and `kubectl` into `/usr/local/bin`.
 - The EE intentionally filters the `openshift-clients` RPM from bindep to avoid failing without RHSM.
 
+Notes:
+- **Collections are optional**: You can use `oc`/`kubectl` binaries without installing `kubernetes.core` or `redhat.openshift` collections.
+
 ## Step 2: Verify
 
 ```
 podman run --rm ansible-ee-minimal:v5 which oc kubectl
 podman run --rm ansible-ee-minimal:v5 oc version --client
 ansible-navigator collections --mode stdout --eei ansible-ee-minimal:v5 | grep kubernetes.core
+```
+
+## Step 3: Two-Phase Testing
+
+To ensure consistency and avoid conflicts between the two installation paths, the project uses a two-phase testing approach:
+
+### Phase 1: Test Path B (Tarball - No RHSM Required)
+
+This phase tests the tarball installation method, which works without RHSM credentials:
+
+```bash
+# Build and test Path B
+export ANSIBLE_HUB_TOKEN=$(cat token)
+make test-openshift-tarball
+```
+
+Or manually:
+```bash
+# Setup Path B configuration
+make setup-openshift-tarball
+# Build
+make build-openshift-tarball
+# Test
+make test-openshift-tooling
+```
+
+### Phase 2: Test Path A (RHSM/RPM - Requires Credentials)
+
+This phase tests the RPM installation method via RHSM:
+
+```bash
+# First, create files/optional-configs/rhsm-activation.env with:
+# RH_ORG=<your_org>
+# RH_ACT_KEY=<your_activation_key>
+
+# Then build and test Path A
+export ANSIBLE_HUB_TOKEN=$(cat token)
+make test-openshift-rhsm
+```
+
+Or manually:
+```bash
+# Setup Path A configuration (requires rhsm-activation.env)
+make setup-openshift-rhsm
+# Build
+make build-openshift-rhsm
+# Test
+make test-openshift-tooling
+```
+
+### Automated Testing in CI/CD
+
+The GitHub Actions workflow (`.github/workflows/test-openshift.yml`) automatically runs both phases:
+
+- **Phase 1** always runs and tests the tarball installation
+- **Phase 2** runs only if `RH_ORG` and `RH_ACT_KEY` secrets are configured in GitHub
+
+This ensures:
+- Both paths are tested independently
+- No conflicts between `oc-install.env` and `rhsm-activation.env`
+- Consistent, reproducible builds for each path
+
+### Testing Script
+
+The project includes a dedicated test script (`scripts/test-openshift-tooling.sh`) that verifies:
+
+1. `oc` and `kubectl` binaries exist and are executable
+2. Version commands work correctly
+3. `kubernetes.core` collection is installed (if configured)
+4. Binary permissions are correct
+
+You can run it directly:
+```bash
+scripts/test-openshift-tooling.sh ansible-ee-minimal:v5 podman
 ```
 
 ## Troubleshooting

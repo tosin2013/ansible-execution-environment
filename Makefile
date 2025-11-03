@@ -17,6 +17,7 @@ ifndef $(SOURCE_TOKEN)
 endif
 
 .PHONY : header clean lint check build scan test publish list shell docs-setup docs-build docs-serve docs-test token
+.PHONY : build-openshift-tarball build-openshift-rhsm test-openshift-tooling setup-openshift-tarball setup-openshift-rhsm
 all: header clean lint build test publish
 
 header:
@@ -131,3 +132,54 @@ docs-serve: docs-setup # Serve docs on localhost:8000
 docs-test: # Build, serve, and probe the site locally
 	@echo "\n\n***************************** Docs Test... \n"
 	bash scripts/test-docs-local.sh
+
+# OpenShift/Kubernetes Tooling Targets
+# Path B: Tarball install (no RHSM required)
+setup-openshift-tarball: # Setup for Path B (tarball) testing
+	@echo "\n\n***************************** Setting up OpenShift Tarball (Path B)... \n"
+	@mkdir -p files/optional-configs
+	@if [ ! -f files/optional-configs/oc-install.env ]; then \
+		echo "OC_VERSION=stable-4.19" > files/optional-configs/oc-install.env; \
+		echo "Created files/optional-configs/oc-install.env with OC_VERSION=stable-4.19"; \
+	else \
+		echo "files/optional-configs/oc-install.env already exists"; \
+	fi
+	@if [ -f files/optional-configs/rhsm-activation.env ]; then \
+		echo "Warning: rhsm-activation.env exists. Renaming to avoid conflicts."; \
+		mv files/optional-configs/rhsm-activation.env files/optional-configs/rhsm-activation.env.bak || true; \
+	fi
+
+build-openshift-tarball: setup-openshift-tarball build # Build with Path B (tarball)
+	@echo "\n\n***************************** Built with OpenShift Tarball (Path B) \n"
+
+test-openshift-tarball: build-openshift-tarball # Test Path B build
+	@echo "\n\n***************************** Testing OpenShift Tarball (Path B)... \n"
+	@bash scripts/test-openshift-tooling.sh $(TARGET_NAME):$(TARGET_TAG) $(CONTAINER_ENGINE)
+
+# Path A: RPM install (requires RHSM entitlements)
+setup-openshift-rhsm: # Setup for Path A (RHSM) testing
+	@echo "\n\n***************************** Setting up OpenShift RHSM (Path A)... \n"
+	@mkdir -p files/optional-configs
+	@if [ ! -f files/optional-configs/rhsm-activation.env ]; then \
+		echo "Error: files/optional-configs/rhsm-activation.env not found"; \
+		echo "Create it with:"; \
+		echo "  RH_ORG=<your_org>"; \
+		echo "  RH_ACT_KEY=<your_activation_key>"; \
+		exit 1; \
+	fi
+	@if [ -f files/optional-configs/oc-install.env ]; then \
+		echo "Warning: oc-install.env exists. Renaming to avoid conflicts."; \
+		mv files/optional-configs/oc-install.env files/optional-configs/oc-install.env.bak || true; \
+	fi
+
+build-openshift-rhsm: setup-openshift-rhsm build # Build with Path A (RHSM)
+	@echo "\n\n***************************** Built with OpenShift RHSM (Path A) \n"
+
+test-openshift-rhsm: build-openshift-rhsm # Test Path A build
+	@echo "\n\n***************************** Testing OpenShift RHSM (Path A)... \n"
+	@bash scripts/test-openshift-tooling.sh $(TARGET_NAME):$(TARGET_TAG) $(CONTAINER_ENGINE)
+
+# Generic test target for OpenShift tooling (works with any image)
+test-openshift-tooling: # Test OpenShift/Kubernetes tooling in built image
+	@echo "\n\n***************************** Testing OpenShift Tooling... \n"
+	@bash scripts/test-openshift-tooling.sh $(TARGET_NAME):$(TARGET_TAG) $(CONTAINER_ENGINE)

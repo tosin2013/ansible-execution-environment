@@ -19,7 +19,14 @@ The Makefile orchestrates build, test, and publish tasks.
 - `test` — run `files/playbook.yml` via `ansible-navigator` using the built image.
 - `publish` — tag and push to `TARGET_HUB`.
 - `shell` — open a shell in the image.
-- `docs-setup`/`docs-build`/`docs-serve` — local docs workflows.
+- `docs-setup`/`docs-build`/`docs-serve`/`docs-test` — local docs workflows.
+- `setup-openshift-tarball` — setup Path B (tarball) configuration.
+- `build-openshift-tarball` — build with Path B (tarball install).
+- `test-openshift-tarball` — build and test Path B.
+- `setup-openshift-rhsm` — setup Path A (RHSM) configuration.
+- `build-openshift-rhsm` — build with Path A (RHSM/RPM install).
+- `test-openshift-rhsm` — build and test Path A.
+- `test-openshift-tooling` — test OpenShift/Kubernetes tooling in built image.
 
 ## Variables
 
@@ -50,10 +57,29 @@ TARGET_HUB=quay.io TARGET_NAME=your-namespace/ansible-ee make publish
 
 ## Optional Config Flows
 
-- RHSM activation (RPM path):
-  - Create `files/optional-configs/rhsm-activation.env` with `RH_ORG`/`RH_ACT_KEY`.
-  - `make build`
+### OpenShift/Kubernetes Tooling
 
-- oc/kubectl tarball (repo-free path):
-  - Create `files/optional-configs/oc-install.env` with `OC_VERSION` (e.g., `stable-4.19`).
-  - `make build`
+The project supports two paths for installing OpenShift/Kubernetes tooling, tested separately to avoid conflicts:
+
+**Path A — RHSM/RPM install (requires RHSM entitlements):**
+```bash
+# Create files/optional-configs/rhsm-activation.env with RH_ORG and RH_ACT_KEY
+make setup-openshift-rhsm build-openshift-rhsm
+# Or test it all at once:
+make test-openshift-rhsm
+```
+
+**Path B — Tarball install (no RHSM required):**
+```bash
+# Automatically creates files/optional-configs/oc-install.env
+make setup-openshift-tarball build-openshift-tarball
+# Or test it all at once:
+make test-openshift-tarball
+```
+
+**Test existing image:**
+```bash
+make test-openshift-tooling
+```
+
+See the [Enable Kubernetes and OpenShift Tooling](../how-to/enable-kubernetes-openshift.md) guide for details on the two-phase testing approach.
