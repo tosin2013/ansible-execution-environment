@@ -32,18 +32,31 @@ jobs:
   test-openshift-rhsm:
     name: Test OpenShift RHSM (Path A)
     runs-on: ubuntu-latest
-    # Only run if RHSM credentials are provided
-    if: ${{ secrets.RH_ORG != '' && secrets.RH_ACT_KEY != '' }}
+    env:
+      RH_ORG: ${{ secrets.RH_ORG }}
+      RH_ACT_KEY: ${{ secrets.RH_ACT_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check for RHSM Credentials
+        id: check-creds
+        run: |
+          if [ -z "$RH_ORG" ] || [ -z "$RH_ACT_KEY" ]; then
+            echo "missing-creds=true" >> $GITHUB_OUTPUT
+            echo "⚠ Skipping: RH_ORG and RH_ACT_KEY secrets not configured"
+            exit 0
+          fi
+          echo "missing-creds=false" >> $GITHUB_OUTPUT
+
       - name: Set up Python
+        if: steps.check-creds.outputs.missing-creds == 'false'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install tooling (Podman + Ansible)
+        if: steps.check-creds.outputs.missing-creds == 'false'
         run: |
           sudo apt-get update
           sudo apt-get install -y gettext-base podman
@@ -51,7 +64,7 @@ jobs:
           pip install ansible-builder ansible-navigator
 
       - name: Log in to registry.redhat.io (Podman)
-        if: ${{ secrets.REDHAT_REGISTRY_USERNAME != '' && secrets.REDHAT_REGISTRY_PASSWORD != '' }}
+        if: ${{ steps.check-creds.outputs.missing-creds == 'false' && secrets.REDHAT_REGISTRY_USERNAME != '' && secrets.REDHAT_REGISTRY_PASSWORD != '' }}
         run: |
           echo "$REDHAT_REGISTRY_PASSWORD" | podman login registry.redhat.io \
             --username "$REDHAT_REGISTRY_USERNAME" --password-stdin
@@ -60,6 +73,7 @@ jobs:
           REDHAT_REGISTRY_PASSWORD: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
 
       - name: Setup Path A (RHSM) Configuration
+        if: steps.check-creds.outputs.missing-creds == 'false'
         run: |
           mkdir -p files/optional-configs
           echo "RH_ORG=$RH_ORG" > files/optional-configs/rhsm-activation.env
@@ -67,11 +81,9 @@ jobs:
           echo "Created rhsm-activation.env for Path A testing"
           # Ensure no tarball config exists
           rm -f files/optional-configs/oc-install.env
-        env:
-          RH_ORG: ${{ secrets.RH_ORG }}
-          RH_ACT_KEY: ${{ secrets.RH_ACT_KEY }}
 
       - name: Build with Path A (RHSM)
+        if: steps.check-creds.outputs.missing-creds == 'false'
         env:
           ANSIBLE_HUB_TOKEN: ${{ secrets.ANSIBLE_HUB_TOKEN }}
         run: |
@@ -80,6 +92,7 @@ jobs:
             make build-openshift-rhsm
 
       - name: Test Path A (RHSM)
+        if: steps.check-creds.outputs.missing-creds == 'false'
         env:
           ANSIBLE_HUB_TOKEN: ${{ secrets.ANSIBLE_HUB_TOKEN }}
         run: |
@@ -87,6 +100,7 @@ jobs:
             make test-openshift-tooling
 
       - name: Run Standard Playbook Test
+        if: steps.check-creds.outputs.missing-creds == 'false'
         env:
           ANSIBLE_HUB_TOKEN: ${{ secrets.ANSIBLE_HUB_TOKEN }}
         run: |
