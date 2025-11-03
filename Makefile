@@ -18,9 +18,14 @@ TARGET_HUB ?= quay.io
 #TARGET_USERNAME ?= jwadleig
 TARGET_NAME ?= ansible-ee-minimal
 
-ifndef $(SOURCE_TOKEN)
-  $(error The environment variable ANSIBLE_HUB_TOKEN is undefined and required)
-endif
+# Check ANSIBLE_HUB_TOKEN only for targets that need it
+# Use .PHONY target with a check that runs at execution time, not parse time
+.PHONY: check-token
+check-token:
+	@if [ -z "$$ANSIBLE_HUB_TOKEN" ]; then \
+		echo "ERROR: The environment variable ANSIBLE_HUB_TOKEN is undefined and required for this target"; \
+		exit 1; \
+	fi
 
 .PHONY : header clean lint check build scan test publish list shell docs-setup docs-build docs-serve docs-test token setup
 .PHONY : build-openshift-tarball build-openshift-rhsm test-openshift-tooling setup-openshift-tarball setup-openshift-rhsm
@@ -238,14 +243,14 @@ lint: # Lint the repository with yamllint
 	@echo "\n\n***************************** Linting... \n"
 	yamllint .
 
-token: # Test token
+token: check-token # Test token
 	@echo "\n\n***************************** Token... \n"
 	envsubst < files/ansible.cfg.template > ./ansible.cfg
 	mkdir -p collections
 	ansible-galaxy collection download -r files/requirements.yml -p collections/
 
 
-build: # Build the execution environment image
+build: check-token # Build the execution environment image
 	@echo "\n\n***************************** Building... \n"
 	@if [ -n "$$REDHAT_REGISTRY_USERNAME" ] && [ -n "$$REDHAT_REGISTRY_PASSWORD" ]; then \
 		echo "Logging in to $(SOURCE_HUB)..."; \
