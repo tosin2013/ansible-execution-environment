@@ -89,6 +89,9 @@ additional_build_steps:
             tar -C /usr/local/bin -xzf /tmp/oc.tgz oc kubectl && \
             echo "==> Setting executable permissions..." && \
             chmod +x /usr/local/bin/oc /usr/local/bin/kubectl && \
+            echo "==> Creating symlinks in /usr/bin for compatibility..." && \
+            ln -sf /usr/local/bin/oc /usr/bin/oc && \
+            ln -sf /usr/local/bin/kubectl /usr/bin/kubectl && \
             echo "==> Verifying installation..." && \
             /usr/local/bin/oc version --client && \
             /usr/local/bin/kubectl version --client && \

@@ -16,11 +16,15 @@ echo "=========================================="
 # Test 1: Verify oc binary exists
 echo ""
 echo "Test 1: Checking for oc binary..."
-if $CONTAINER_ENGINE run --rm "$IMAGE" which oc >/dev/null 2>&1; then
-    echo "✓ oc binary found"
-    OC_PATH=$($CONTAINER_ENGINE run --rm "$IMAGE" which oc)
-    echo "  Location: $OC_PATH"
-else
+# Check common locations since 'which' may not be available in minimal images
+for OC_PATH in /usr/local/bin/oc /usr/bin/oc; do
+    if $CONTAINER_ENGINE run --rm "$IMAGE" test -f "$OC_PATH" 2>/dev/null; then
+        echo "✓ oc binary found"
+        echo "  Location: $OC_PATH"
+        break
+    fi
+done
+if [ -z "$OC_PATH" ] || ! $CONTAINER_ENGINE run --rm "$IMAGE" test -f "$OC_PATH" 2>/dev/null; then
     echo "✗ oc binary not found"
     exit 1
 fi
@@ -28,11 +32,15 @@ fi
 # Test 2: Verify kubectl binary exists
 echo ""
 echo "Test 2: Checking for kubectl binary..."
-if $CONTAINER_ENGINE run --rm "$IMAGE" which kubectl >/dev/null 2>&1; then
-    echo "✓ kubectl binary found"
-    KUBECTL_PATH=$($CONTAINER_ENGINE run --rm "$IMAGE" which kubectl)
-    echo "  Location: $KUBECTL_PATH"
-else
+# Check common locations since 'which' may not be available in minimal images
+for KUBECTL_PATH in /usr/local/bin/kubectl /usr/bin/kubectl; do
+    if $CONTAINER_ENGINE run --rm "$IMAGE" test -f "$KUBECTL_PATH" 2>/dev/null; then
+        echo "✓ kubectl binary found"
+        echo "  Location: $KUBECTL_PATH"
+        break
+    fi
+done
+if [ -z "$KUBECTL_PATH" ] || ! $CONTAINER_ENGINE run --rm "$IMAGE" test -f "$KUBECTL_PATH" 2>/dev/null; then
     echo "✗ kubectl binary not found"
     exit 1
 fi
